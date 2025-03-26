@@ -23,14 +23,15 @@ var LevelPrefix = map[LogLevel]string{
 }
 
 type Logger struct {
-	iLogger  *log.Logger
-	dLogger  *log.Logger
-	eLogger  *log.Logger
-	logFile  *os.File
-	fileName string
-	level    LogLevel
-	no       int
-	lock     sync.Mutex
+	iLogger  *log.Logger // Logger for Info Level
+	dLogger  *log.Logger // Logger for Debug Level
+	eLogger  *log.Logger // Logger for Error Level
+	logFile  *os.File    // File to write logs
+	fizeSize uint64      // Max file size
+	fileName string      // File name
+	level    LogLevel    // Log level
+	no       int         // Number of log files
+	lock     sync.Mutex  // Mutex lock
 }
 
 func NewLogger() *Logger {
@@ -53,7 +54,7 @@ func buildLogFile() (*os.File, error) {
 	currTime := time.Now()
 
 	// Build the filename
-	filename := fmt.Sprintf("log-%s.txt", currTime.Format(time.DateOnly))
+	filename := fmt.Sprintf("log-%s.log", currTime.Format(time.DateOnly))
 	// Create the file
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
@@ -62,22 +63,55 @@ func buildLogFile() (*os.File, error) {
 	return file, nil
 }
 
-func (l *Logger) Info(message string) {
+// Rotate the log file when it reaches the max size limit and create a new one with number of log files
+func (l *Logger) rotateLogFile() error {
 	l.lock.Lock()
-	l.iLogger.Println(message)
-	l.lock.Unlock()
+	defer l.lock.Unlock()
+
+	l.logFile.Close()
+
+	l.no = l.no + 1
+	newFilename := fmt.Sprintf("log-%s.%d.log", l.fileName, l.no)
+
+	// Create the file
+	newFile, err := os.OpenFile(newFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return fmt.Errorf("Failed to open log file")
+	}
+
+	l.logFile = newFile
+	l.dLogger.SetOutput(newFile)
+	l.iLogger.SetOutput(newFile)
+	l.eLogger.SetOutput(newFile)
+
+	return nil
+}
+
+func (l *Logger) SetLevel(level LogLevel) {
+	l.level = level
+}
+
+func (l *Logger) write(level LogLevel, message string) {
+	switch level {
+	case Debug:
+		l.dLogger.Println(message)
+	case Info:
+		l.iLogger.Println(message)
+	case Error:
+		l.eLogger.Println(message)
+	}
+}
+
+func (l *Logger) Info(message string) {
+	l.write(Info, message)
 }
 
 func (l *Logger) Debug(message string) {
-	l.lock.Lock()
-	l.dLogger.Println(message)
-	l.lock.Unlock()
+	l.write(Debug, message)
 }
 
 func (l *Logger) Error(message string) {
-	l.lock.Lock()
-	l.eLogger.Println(message)
-	l.lock.Unlock()
+	l.write(Error, message)
 }
 
 func (l *Logger) Close() {
