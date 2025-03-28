@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -181,7 +180,6 @@ func TestRotateLog(t *testing.T) {
 	// 1024 * 1024 = 1048576 bytes
 	// 41 * 255770 = 10485770 bytes almost 11 Log files
 	for i := 0; i < 255770; i++ {
-		//logger.Info(strconv.Itoa(i))
 		logger.Info("")
 	}
 
@@ -196,7 +194,6 @@ func TestRotateLog(t *testing.T) {
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".log") {
 			cnt++
-			fmt.Printf("Found log file: %s\n", file.Name())
 		}
 	}
 
@@ -205,4 +202,27 @@ func TestRotateLog(t *testing.T) {
 	}
 
 	removeLogFile()
+}
+
+func BenchmarkWriteLogToFile(b *testing.B) {
+	logger := NewLogger()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Info(InfoMsg)
+	}
+}
+func BenchmarkWriteLogToFile2(b *testing.B) {
+	logger := NewLogger()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Info(InfoMsg)
+	}
+}
+
+func BenchmarkWriteLogToFile3(b *testing.B) {
+	logger := NewLogger()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Info(InfoMsg)
+	}
 }
