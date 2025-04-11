@@ -57,6 +57,21 @@ func NewLogger() *Logger {
 	}
 }
 
+// Build file for logger with datetime as filename
+func buildLogFile() (*os.File, error) {
+	// Get the current time
+	currTime := time.Now()
+
+	// Build the filename
+	filename := fmt.Sprintf("log-%s.log", currTime.Format(time.DateOnly))
+	// Create the file
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to open log file")
+	}
+	return file, nil
+}
+
 func (l *Logger) SetLevel(level LogLevel) {
 	l.level = level
 }
@@ -71,21 +86,6 @@ func (l *Logger) SetMaxFileSize(maxFileSize int64) error {
 	l.maxFileSize = maxFileSize << 20
 	fmt.Printf("Max File Size: %d\n", l.maxFileSize)
 	return nil
-}
-
-// Build file for logger with datetime as filename
-func buildLogFile() (*os.File, error) {
-	// Get the current time
-	currTime := time.Now()
-
-	// Build the filename
-	filename := fmt.Sprintf("log-%s.log", currTime.Format(time.DateOnly))
-	// Create the file
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to open log file")
-	}
-	return file, nil
 }
 
 // Rotate the log file when it reaches the max size limit and create a new one with number of log files
@@ -150,12 +150,24 @@ func (l *Logger) Debug(message string) {
 	l.write(Debug, message)
 }
 
+func (l *Logger) Debugf(format string, args ...interface{}) {
+	l.write(Debug, fmt.Sprintf(format, args...))
+}
+
 func (l *Logger) Info(message string) {
 	l.write(Info, message)
 }
 
+func (l *Logger) Infof(format string, args ...interface{}) {
+	l.write(Info, fmt.Sprintf(format, args...))
+}
+
 func (l *Logger) Error(message string) {
 	l.write(Error, message)
+}
+
+func (l *Logger) Errorf(format string, args ...interface{}) {
+	l.write(Error, fmt.Sprintf(format, args...))
 }
 
 func (l *Logger) Close() {
