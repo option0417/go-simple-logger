@@ -150,12 +150,24 @@ func (l *Logger) Debug(message string) {
 	l.write(Debug, message)
 }
 
+func (l *Logger) Debugf(format string, args ...interface{}) {
+	l.write(Debug, fmt.Sprintf(format, args...))
+}
+
 func (l *Logger) Info(message string) {
 	l.write(Info, message)
 }
 
+func (l *Logger) Infof(format string, args ...interface{}) {
+	l.write(Info, fmt.Sprintf(format, args...))
+}
+
 func (l *Logger) Error(message string) {
 	l.write(Error, message)
+}
+
+func (l *Logger) Errorf(format string, args ...interface{}) {
+	l.write(Error, fmt.Sprintf(format, args...))
 }
 
 func (l *Logger) Close() {

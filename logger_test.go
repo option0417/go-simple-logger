@@ -12,42 +12,6 @@ const (
 	ErrorMsg = "Test Error message"
 )
 
-func removeLogFile() {
-	files, err := os.ReadDir("./")
-	if err != nil {
-		panic(err)
-	}
-
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".log") {
-			err := os.Remove(file.Name())
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-}
-
-func fetchLogContent() ([]byte, error) {
-	files, err := os.ReadDir("./")
-	if err != nil {
-		return nil, err
-	}
-
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".log") {
-
-			// Read the log file
-			content, err := os.ReadFile(file.Name())
-			if err != nil {
-				return nil, err
-			}
-			return content, nil
-		}
-	}
-	return nil, nil
-}
-
 func TestWriteLogToFile(t *testing.T) {
 	// Create Logger
 	logger := NewLogger()
@@ -204,6 +168,63 @@ func TestRotateLog(t *testing.T) {
 	removeLogFile()
 }
 
+func TestWriteLogWithFormat(t *testing.T) {
+	// Create Logger
+	logger := NewLogger()
+
+	logger.Debugf("Debug message with string: %s", "test-string")
+	logger.Debugf("Debug message with integer: %d", 12345)
+	logger.Debugf("Debug message with object: %v", logger)
+
+	logger.Infof("Info message with string: %s", "test-string")
+	logger.Infof("Info message with integer: %d", 12345)
+	logger.Infof("Info message with object: %v", logger)
+
+	logger.Errorf("Error message with string: %s", "test-string")
+	logger.Errorf("Error message with integer: %d", 12345)
+	logger.Errorf("Error message with object: %v", logger)
+
+	contentBytes, err := fetchLogContent()
+	if err != nil {
+		t.Error(err)
+	}
+
+	content := string(contentBytes)
+
+	// Verify the content of the log file
+	if !strings.Contains(content, "Debug message with string: test-string") {
+		t.Error("Debug message with string not found in the log file")
+	}
+	if !strings.Contains(content, "Debug message with integer: 12345") {
+		t.Error("Debug message with integer not found in the log file")
+	}
+	if !strings.Contains(content, "Debug message with object") {
+		t.Error("Debug message with object not found in the log file")
+	}
+
+	if !strings.Contains(content, "Info message with string: test-string") {
+		t.Error("Info message with string not found in the log file")
+	}
+	if !strings.Contains(content, "Info message with integer: 12345") {
+		t.Error("Info message with integer not found in the log file")
+	}
+	if !strings.Contains(content, "Info message with object") {
+		t.Error("Info message with object not found in the log file")
+	}
+
+	if !strings.Contains(content, "Error message with string: test-string") {
+		t.Error("Error message with string not found in the log file")
+	}
+	if !strings.Contains(content, "Error message with integer: 12345") {
+		t.Error("Error message with integer not found in the log file")
+	}
+	if !strings.Contains(content, "Error message with object") {
+		t.Error("Error message with object not found in the log file")
+	}
+
+	removeLogFile()
+}
+
 func BenchmarkWriteLogToFile(b *testing.B) {
 	logger := NewLogger()
 	b.ResetTimer()
@@ -225,4 +246,40 @@ func BenchmarkWriteLogToFile3(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		logger.Info(InfoMsg)
 	}
+}
+
+func removeLogFile() {
+	files, err := os.ReadDir("./")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".log") {
+			err := os.Remove(file.Name())
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+}
+
+func fetchLogContent() ([]byte, error) {
+	files, err := os.ReadDir("./")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".log") {
+
+			// Read the log file
+			content, err := os.ReadFile(file.Name())
+			if err != nil {
+				return nil, err
+			}
+			return content, nil
+		}
+	}
+	return nil, nil
 }
