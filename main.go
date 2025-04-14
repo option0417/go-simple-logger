@@ -1,7 +1,11 @@
 package main
 
+import (
+	"tw.com.wd.utils/logger/log"
+)
+
 func main() {
-	logger := NewLogger()
+	logger := log.NewLogger()
 	defer logger.Close()
 
 	logger.Info("This is an information message")
